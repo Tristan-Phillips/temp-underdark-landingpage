@@ -829,22 +829,20 @@
       opacity: 1;
     }
 
-    /* ─── Light mode fallback ────────────────────────────────────── */
-    @media (prefers-color-scheme: light) {
-      :root {
-        --bg-void:        #f0eef5;
-        --bg-base:        #e8e4f0;
-        --bg-surface:     #dcd8ea;
-        --bg-elevated:    #d0cce0;
-        --text-primary:   #1a1525;
-        --text-secondary: #4a3f60;
-        --text-muted:     #7a6e90;
-        --border-default: rgba(100, 30, 160, 0.16);
-        --border-muted:   rgba(0, 0, 0, 0.08);
-        --accent-rgb:     120, 20, 200;
-        --amber-rgb:      180, 110, 10;
-        --crimson-text:   #8B0000;
-      }
+    /* ─── Light mode (toggle — not active until JS sets data-theme="light") ── */
+    [data-theme="light"] {
+      --bg-void:        #f0eef5;
+      --bg-base:        #e8e4f0;
+      --bg-surface:     #dcd8ea;
+      --bg-elevated:    #d0cce0;
+      --text-primary:   #1a1525;
+      --text-secondary: #4a3f60;
+      --text-muted:     #7a6e90;
+      --border-default: rgba(100, 30, 160, 0.16);
+      --border-muted:   rgba(0, 0, 0, 0.08);
+      --accent-rgb:     120, 20, 200;
+      --amber-rgb:      180, 110, 10;
+      --crimson-text:   #8B0000;
     }
   </style>
 </head>
