@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AI character and world-building. Encrypted in your browser. Open source on the server.">
+  <title>Underdark</title>
+  <style>
+    :root {
+      --bg-void:           #020106;
+      --bg-base:           #06040A;
+      --bg-surface:        #0D0A14;
+      --bg-elevated:       #141020;
+
+      --accent-rgb:        180, 40, 248;
+      --accent:            rgb(var(--accent-rgb));
+      --accent-border:     rgba(var(--accent-rgb), 0.35);
+      --accent-border-dim: rgba(var(--accent-rgb), 0.16);
+
+      --amber-rgb:         246, 166, 38;
+      --amber:             rgb(var(--amber-rgb));
+      --amber-border:      rgba(var(--amber-rgb), 0.30);
+
+      --crimson:           #8B1A1A;
+      --crimson-text:      #C0392B;
+
+      --text-primary:      #EDE8F5;
+      --text-secondary:    #9580AA;
+      --text-muted:        #5C4E6E;
+
+      --border-default:    rgba(180, 40, 248, 0.16);
+      --border-muted:      rgba(255, 255, 255, 0.06);
+
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
+
+      --ease-out: cubic-bezier(0.25, 0, 0, 1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background-color: var(--bg-void);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 1rem;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+      transition: opacity 160ms var(--ease-out);
+    }
+    a:hover { opacity: 0.75; }
+    a:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+      border-radius: 3px;
+    }
+
+    /* ─── WIP Banner ─────────────────────────────────────────────── */
+    .wip-banner {
+      width: 100%;
+      background: rgba(var(--amber-rgb), 0.06);
+      border-bottom: 1px solid var(--amber-border);
+      padding: 0.6rem 1.5rem;
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      letter-spacing: 0.06em;
+      color: var(--amber);
+      position: relative;
+      z-index: 10;
+    }
+
+    /* ─── Layout ─────────────────────────────────────────────────── */
+    .container {
+      width: 100%;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    section {
+      padding: 5rem 0;
+      border-bottom: 1px solid var(--border-muted);
+    }
+    section:last-of-type { border-bottom: none; }
+
+    /* ─── Hero ───────────────────────────────────────────────────── */
+    .hero {
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      position: relative;
+      padding: 5rem 1.5rem;
+      border-bottom: 1px solid var(--border-muted);
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% -10%,
+          rgba(var(--accent-rgb), 0.09) 0%, transparent 65%),
+        radial-gradient(ellipse 50% 40% at 20% 80%,
+          rgba(var(--accent-rgb), 0.04) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 30% at 80% 70%,
+          rgba(246, 166, 38, 0.03) 0%, transparent 55%);
+      pointer-events: none;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0.022;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      pointer-events: none;
+      mix-blend-mode: overlay;
+    }
+
+    /* Commons pool — top-right */
+    .hero__commons {
+      position: absolute;
+      top: 1.25rem;
+      right: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.25rem;
+      z-index: 1;
+      padding: 0.7rem 1rem 0.65rem;
+      background: rgba(var(--accent-rgb), 0.04);
+      border: 1px solid var(--accent-border-dim);
+      border-radius: 8px;
+      transition: border-color 160ms var(--ease-out), box-shadow 160ms var(--ease-out);
+    }
+    .hero__commons:hover {
+      border-color: rgba(var(--accent-rgb), 0.28);
+      box-shadow:
+        0 0 12px rgba(var(--accent-rgb), 0.08),
+        0 0 32px rgba(var(--accent-rgb), 0.04);
+    }
+    .hero__commons-label {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .hero__commons-balance {
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      color: var(--text-primary);
+      letter-spacing: 0.03em;
+      line-height: 1;
+    }
+    .hero__commons-balance .xno-symbol {
+      color: var(--accent);
+      filter: drop-shadow(0 0 6px rgba(var(--accent-rgb), 0.5));
+    }
+    .hero__commons-balance .xno-unit {
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+    }
+    .hero__commons-sub {
+      font-size: 0.64rem;
+      color: var(--text-muted);
+      text-align: right;
+      letter-spacing: 0.02em;
+    }
+
+    .hero__inner {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2rem;
+      max-width: 640px;
+    }
+
+    .hero__glyph {
+      color: var(--accent);
+      filter: drop-shadow(0 0 18px rgba(var(--accent-rgb), 0.45))
+              drop-shadow(0 0 48px rgba(var(--accent-rgb), 0.18));
+      animation: glyph-breathe 4s ease-in-out infinite;
+    }
+    @keyframes glyph-breathe {
+      0%, 100% { filter: drop-shadow(0 0 18px rgba(var(--accent-rgb), 0.40)) drop-shadow(0 0 48px rgba(var(--accent-rgb), 0.15)); }
+      50%       { filter: drop-shadow(0 0 26px rgba(var(--accent-rgb), 0.58)) drop-shadow(0 0 64px rgba(var(--accent-rgb), 0.25)); }
+    }
+
+    .hero__wordmark {
+      font-family: var(--font-mono);
+      font-size: clamp(1.1rem, 3vw, 1.4rem);
+      font-weight: 400;
+      letter-spacing: 0.22em;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+    }
+
+    .hero__tagline {
+      font-size: clamp(1.5rem, 4.5vw, 2.6rem);
+      font-weight: 400;
+      line-height: 1.3;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+    }
+    .hero__tagline em {
+      font-style: normal;
+      color: var(--accent);
+    }
+
+    .hero__ctas {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .hero__cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      letter-spacing: 0.06em;
+      color: var(--accent);
+      border: 1px solid var(--accent-border);
+      border-radius: 8px;
+      padding: 0.7rem 1.4rem;
+      background: rgba(var(--accent-rgb), 0.06);
+      transition: background 160ms var(--ease-out),
+                  box-shadow 160ms var(--ease-out),
+                  border-color 160ms var(--ease-out);
+      min-height: 44px;
+    }
+    .hero__cta:hover {
+      background: rgba(var(--accent-rgb), 0.12);
+      border-color: var(--accent);
+      box-shadow:
+        0 0 0 1px rgba(var(--accent-rgb), 0.12),
+        0 0 20px rgba(var(--accent-rgb), 0.18),
+        0 0 48px rgba(var(--accent-rgb), 0.08);
+      opacity: 1;
+    }
+    .hero__cta--secondary {
+      color: var(--text-secondary);
+      border-color: var(--border-muted);
+      background: rgba(255, 255, 255, 0.025);
+    }
+    .hero__cta--secondary:hover {
+      color: var(--text-primary);
+      border-color: var(--border-default);
+      background: rgba(255, 255, 255, 0.05);
+      box-shadow: none;
+    }
+
+    /* ─── Section headers ────────────────────────────────────────── */
+    .section-header {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 2rem;
+      text-shadow:
+        0 0 8px rgba(var(--accent-rgb), 0.55),
+        0 0 20px rgba(var(--accent-rgb), 0.25);
+    }
+
+    /* ─── What it is ─────────────────────────────────────────────── */
+    .what__prose {
+      font-size: clamp(1rem, 2vw, 1.15rem);
+      line-height: 1.75;
+      color: var(--text-secondary);
+      max-width: 620px;
+    }
+    .what__prose strong {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .features {
+      margin-top: 3rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1rem;
+    }
+    .feature {
+      padding: 1.25rem 1.4rem;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: 10px;
+      transition: border-color 160ms var(--ease-out), box-shadow 160ms var(--ease-out);
+    }
+    .feature:hover {
+      border-color: var(--accent-border);
+      box-shadow: 0 0 16px rgba(var(--accent-rgb), 0.10);
+    }
+    .feature__title {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 0.4rem;
+    }
+    .feature__desc {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    /* ─── Account diagram ───────────────────────────────────────── */
+    .diagram-section {
+      padding: 5rem 0;
+      border-bottom: 1px solid var(--border-muted);
+    }
+    .diagram-section .section-header { margin-bottom: 0.6rem; }
+    .diagram-intro {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      max-width: 520px;
+      margin-bottom: 3rem;
+    }
+
+    /* Outer shell: device panel | barrier | server panel */
+    .diagram {
+      display: grid;
+      grid-template-columns: 1fr 40px 1fr;
+      align-items: stretch;
+      max-width: 900px;
+    }
+    @media (max-width: 640px) {
+      .diagram { grid-template-columns: 1fr; }
+      .diagram__barrier { display: none; }
+    }
+
+    /* Panels */
+    .diagram__panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+    .diagram__panel--device {
+      border-radius: 10px 0 0 10px;
+      border-right: none;
+      border-color: var(--accent-border-dim);
+    }
+    .diagram__panel--server {
+      border-radius: 0 10px 10px 0;
+      border-left: none;
+      border-color: var(--border-muted);
+    }
+    .diagram__panel-label {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .diagram__panel--device .diagram__panel-label { color: var(--accent); }
+    .diagram__panel--server .diagram__panel-label { color: var(--text-muted); }
+
+    /* Credential reveal block — the hero of the device panel */
+    .diagram__credential {
+      background: rgba(var(--accent-rgb), 0.04);
+      border: 1px solid var(--accent-border-dim);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .diagram__credential-label {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .diagram__credential-code {
+      font-family: var(--font-mono);
+      font-size: clamp(0.82rem, 1.6vw, 1rem);
+      font-weight: 400;
+      color: var(--accent);
+      letter-spacing: 0.08em;
+      text-align: center;
+      white-space: nowrap;
+      filter: drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.35));
+      animation: code-breathe 4s ease-in-out infinite;
+    }
+    @keyframes code-breathe {
+      0%, 100% { filter: drop-shadow(0 0 6px rgba(var(--accent-rgb), 0.30)); }
+      50%       { filter: drop-shadow(0 0 14px rgba(var(--accent-rgb), 0.55)); }
+    }
+    .diagram__credential-sub {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    /* Flow rows — each is name + arrow + what happens to it */
+    .diagram__flow-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+    }
+    .diagram__flow-name {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      flex: 1;
+    }
+    .diagram__flow-sub {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 0.15rem;
+      letter-spacing: 0.01em;
+    }
+    .diagram__flow-arrow {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      margin-top: 0.2rem;
+    }
+    /* Received items on server side */
+    .diagram__received {
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+    .diagram__received-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+    }
+    .diagram__received-marker {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+    }
+    .diagram__received-marker--pass { color: var(--text-muted); }
+    .diagram__received-marker--block { color: #5a1a1a; }
+    .diagram__received-text { flex: 1; }
+    .diagram__received-name {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .diagram__received-name--blocked {
+      color: var(--text-muted);
+      font-weight: 500;
+      text-decoration: line-through;
+      text-decoration-color: #7a2020;
+      text-decoration-thickness: 1.5px;
+    }
+    .diagram__received-desc {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 0.15rem;
+      letter-spacing: 0.01em;
+    }
+
+    .diagram__panel-footer {
+      margin-top: auto;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border-muted);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      font-style: italic;
+      line-height: 1.5;
+    }
+
+    /* The barrier — glowing vertical wall */
+    .diagram__barrier {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+    .diagram__barrier-line {
+      width: 2px;
+      flex: 1;
+      background: linear-gradient(to bottom,
+        transparent 0%,
+        rgba(var(--accent-rgb), 0.5) 20%,
+        rgba(var(--accent-rgb), 0.5) 80%,
+        transparent 100%);
+      box-shadow:
+        0 0 8px rgba(var(--accent-rgb), 0.3),
+        0 0 20px rgba(var(--accent-rgb), 0.12);
+      animation: barrier-pulse 3s ease-in-out infinite;
+    }
+    @keyframes barrier-pulse {
+      0%, 100% { box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.25), 0 0 20px rgba(var(--accent-rgb), 0.10); }
+      50%       { box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.45), 0 0 32px rgba(var(--accent-rgb), 0.18); }
+    }
+    .diagram__barrier-label {
+      font-family: var(--font-mono);
+      font-size: 0.55rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(var(--accent-rgb), 0.5);
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      white-space: nowrap;
+      padding: 0.5rem 0;
+    }
+
+    /* ─── Privacy + Pricing side by side ────────────────────────── */
+    .twin-section {
+      padding: 5rem 0;
+      border-bottom: 1px solid var(--border-muted);
+    }
+    .twin-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: stretch;
+    }
+    @media (max-width: 720px) {
+      .twin-grid {
+        grid-template-columns: 1fr;
+        gap: 4rem;
+      }
+    }
+    .twin-col {
+      display: flex;
+      flex-direction: column;
+    }
+    .twin-col .section-header {
+      margin-bottom: 1.5rem;
+    }
+    /* Make privacy block and pricing card fill their column height */
+    .twin-col .privacy__block,
+    .twin-col .pricing__card {
+      flex: 1;
+    }
+
+    /* ─── Privacy ────────────────────────────────────────────────── */
+    .privacy__block {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .privacy__item {
+      padding: 1.1rem 1.25rem;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: 10px;
+    }
+    .privacy__item-title {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .privacy__item-title .dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+    }
+    .privacy__item-body {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    .privacy__item-body strong {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+    .privacy__item-body .feature-note {
+      color: var(--crimson-text);
+      font-weight: 500;
+      font-style: italic;
+    }
+
+    .caveat {
+      margin-top: 1rem;
+      padding: 1rem 1.25rem;
+      background: rgba(var(--amber-rgb), 0.04);
+      border: 1px solid var(--amber-border);
+      border-radius: 10px;
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      line-height: 1.65;
+    }
+    .caveat strong {
+      color: var(--amber);
+      font-weight: 500;
+    }
+
+    /* ─── Pricing ────────────────────────────────────────────────── */
+    .pricing__card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: 12px;
+      padding: 1.75rem;
+    }
+    .pricing__top {
+      display: flex;
+      align-items: baseline;
+      gap: 0.6rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-muted);
+    }
+    .pricing__amount {
+      font-size: clamp(2rem, 4vw, 2.8rem);
+      font-weight: 400;
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    .pricing__period {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+    .pricing__breakdown {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border-muted);
+    }
+    .pricing__row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.2rem 1rem;
+      align-items: start;
+    }
+    .pricing__row-label {
+      font-size: 0.85rem;
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+    .pricing__row-amount {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--text-primary);
+      font-weight: 500;
+      text-align: right;
+    }
+    .pricing__row-note {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      grid-column: 1 / -1;
+    }
+    .pricing__topup-note {
+      grid-column: 1 / -1;
+      margin-top: 0.35rem;
+      padding: 0.55rem 0.8rem;
+      background: rgba(var(--amber-rgb), 0.04);
+      border: 1px solid rgba(var(--amber-rgb), 0.22);
+      border-radius: 6px;
+      font-size: 0.72rem;
+      color: var(--amber);
+      line-height: 1.5;
+    }
+    .pricing__commons-note {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+      margin-bottom: 1rem;
+    }
+    .pricing__commons-note strong {
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    .pricing__founding {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      padding: 0.7rem 0.9rem;
+      border: 1px solid var(--border-muted);
+      border-radius: 7px;
+      margin-bottom: 1rem;
+    }
+    .pricing__founding strong {
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    .pricing__agpl {
+      padding: 0.85rem 1rem;
+      background: rgba(var(--amber-rgb), 0.04);
+      border: 1px solid var(--amber-border);
+      border-radius: 8px;
+      font-size: 0.74rem;
+      color: var(--text-secondary);
+      line-height: 1.65;
+    }
+    .pricing__agpl strong { color: var(--amber); font-weight: 500; }
+    .pricing__agpl a { color: var(--amber); }
+
+
+    /* ─── Footer ─────────────────────────────────────────────────── */
+    footer {
+      position: relative;
+      padding: 3.5rem 1.5rem 2.5rem;
+      text-align: center;
+      overflow: hidden;
+    }
+    footer::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 80% at 50% 100%,
+          rgba(var(--accent-rgb), 0.05) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    footer::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 240px;
+      height: 1px;
+      background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(var(--accent-rgb), 0.30) 50%,
+        transparent 100%);
+    }
+    .footer__inner {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+    }
+    .footer__statement {
+      font-size: 0.84rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      white-space: nowrap;
+      font-style: italic;
+    }
+    @media (max-width: 560px) {
+      .footer__statement {
+        white-space: normal;
+        max-width: 320px;
+        text-align: center;
+      }
+    }
+    .footer__contact {
+      display: flex;
+      gap: 1.25rem;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .footer__contact-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      transition: color 160ms var(--ease-out);
+    }
+    .footer__contact-link:hover {
+      color: var(--text-secondary);
+      opacity: 1;
+    }
+    .footer__contact-link svg {
+      flex-shrink: 0;
+      opacity: 0.6;
+    }
+    .footer__divider {
+      width: 1px;
+      height: 12px;
+      background: var(--border-muted);
+    }
+    .footer__sig {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      opacity: 0.45;
+    }
+    .footer__sig a {
+      color: inherit;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      padding-bottom: 1px;
+      transition: color 160ms var(--ease-out), opacity 160ms var(--ease-out);
+    }
+    .footer__sig a:hover {
+      color: var(--text-secondary);
+      opacity: 1;
+    }
+
+    /* ─── Light mode fallback ────────────────────────────────────── */
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg-void:        #f0eef5;
+        --bg-base:        #e8e4f0;
+        --bg-surface:     #dcd8ea;
+        --bg-elevated:    #d0cce0;
+        --text-primary:   #1a1525;
+        --text-secondary: #4a3f60;
+        --text-muted:     #7a6e90;
+        --border-default: rgba(100, 30, 160, 0.16);
+        --border-muted:   rgba(0, 0, 0, 0.08);
+        --accent-rgb:     120, 20, 200;
+        --amber-rgb:      180, 110, 10;
+        --crimson-text:   #8B0000;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="wip-banner" role="banner" aria-label="Work in progress notice">
+    concept · not yet open for signups · work in progress
+  </div>
+
+  <!-- Hero -->
+  <section class="hero" aria-label="Introduction">
+
+    <div class="hero__commons" aria-label="Community commons pool balance">
+      <span class="hero__commons-label">Commons Pool</span>
+      <span class="hero__commons-balance">
+        <span class="xno-symbol">Ӿ</span> —.— <span class="xno-unit">XNO</span>
+      </span>
+      <span class="hero__commons-sub">Community-funded free access</span>
+    </div>
+
+    <div class="hero__inner">
+      <svg class="hero__glyph" width="56" height="56" viewBox="0 0 32 32" fill="none"
+           xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M 6 26 L 6 14 Q 6 6 16 6 Q 26 6 26 14 L 26 26"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+        <line x1="11" y1="17" x2="11" y2="26" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="21" y1="17" x2="21" y2="26" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="11" y1="17" x2="21" y2="17" stroke="currentColor" stroke-width="1" opacity="0.55"/>
+      </svg>
+
+      <span class="hero__wordmark">Underdark</span>
+
+      <h1 class="hero__tagline">
+        Encrypted in your browser.<br>
+        Open code on the server.<br>
+        <em>Your story in between.</em>
+      </h1>
+
+      <div class="hero__ctas">
+        <a class="hero__cta" href="mailto:trap@underdark.lol" aria-label="Email trap@underdark.lol">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="2" y="4" width="20" height="16" rx="2"/>
+            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+          </svg>
+          trap@underdark.lol
+        </a>
+        <a class="hero__cta hero__cta--secondary" href="https://t.me/trapl0l" target="_blank"
+           rel="noopener noreferrer" aria-label="Telegram @trapl0l">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m22 3-8.97 19.53-3.58-7.65L2 11.5Z"/>
+            <path d="M9.45 14.88 22 3"/>
+          </svg>
+          @trapl0l
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- What it is -->
+  <section aria-labelledby="what-heading">
+    <div class="container">
+      <p class="section-header" id="what-heading">What it is</p>
+      <p class="what__prose">
+        A private space for AI-assisted roleplay and creative writing.<br>
+        <strong>Your own instance. Your own AI budget. One monthly fee</strong> for included models.
+        Nothing stored is readable by anyone but you.
+      </p>
+
+      <div class="features" role="list">
+        <div class="feature" role="listitem">
+          <div class="feature__title">Character cards &amp; lorebooks</div>
+          <div class="feature__desc">Build characters with AI-assisted generation. Attach lorebooks, personas, and scenarios. Everything encrypted before it leaves your device.</div>
+        </div>
+        <div class="feature" role="listitem">
+          <div class="feature__title">Feed &amp; world-building</div>
+          <div class="feature__desc">Generate feed posts, scenes, and world lore with configurable AI pipelines. Run in batches or one at a time.</div>
+        </div>
+        <div class="feature" role="listitem">
+          <div class="feature__title">Image gallery</div>
+          <div class="feature__desc">Source images from Wallhaven or generate via AI. Encrypted in your browser before upload. The server stores only ciphertext.</div>
+        </div>
+        <div class="feature" role="listitem">
+          <div class="feature__title">Wizards</div>
+          <div class="feature__desc">Multi-step AI workflows for building complete characters, lorebooks, and scenarios from a guided starting point.</div>
+        </div>
+        <div class="feature" role="listitem">
+          <div class="feature__title">Your instance. Your export.</div>
+          <div class="feature__desc">One container, one volume, one tenant. Everything exportable at any time. The source is public if you ever want to run it yourself.</div>
+        </div>
+        <div class="feature" role="listitem">
+          <div class="feature__title">Unrestricted generation</div>
+          <div class="feature__desc">Explicit content supported, within NanoGPT's terms of service. What you save lives in your encrypted vault.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Account diagram -->
+  <div class="diagram-section">
+    <div class="container">
+      <p class="section-header">Your key. Your vault.</p>
+      <p class="diagram-intro">
+        Access is two things you hold. Together they unlock your vault. <span style="color: var(--text-primary);">Neither is ever stored on the server.</span>
+      </p>
+
+      <div class="diagram" role="img" aria-label="Flow diagram: what you hold, what crosses to the server, and what does not">
+
+        <!-- Device panel -->
+        <div class="diagram__panel diagram__panel--device">
+          <span class="diagram__panel-label">Your device</span>
+
+          <!-- Credential reveal -->
+          <div class="diagram__credential">
+            <span class="diagram__credential-label">Account code</span>
+            <span class="diagram__credential-code">UD · A4F2 · X9K1 · M7P3 · B8Q6</span>
+            <span class="diagram__credential-sub">generated once · not stored after provisioning</span>
+          </div>
+
+          <!-- Flow rows — what travels and what stays -->
+          <div class="diagram__flow-row">
+            <div>
+              <div class="diagram__flow-name">Password</div>
+              <div class="diagram__flow-sub">chosen by you · never transmitted</div>
+            </div>
+          </div>
+
+          <div class="diagram__flow-row">
+            <div>
+              <div class="diagram__flow-name">Encryption key</div>
+              <div class="diagram__flow-sub">derived in-browser · exists only in your session</div>
+            </div>
+          </div>
+
+          <div class="diagram__flow-row">
+            <div>
+              <div class="diagram__flow-name">Your content</div>
+              <div class="diagram__flow-sub">encrypted here before it is stored</div>
+            </div>
+            <span class="diagram__flow-arrow">→</span>
+          </div>
+
+          <p class="diagram__panel-footer">
+            Lose the code or the password and the vault cannot be opened. No recovery path exists.
+          </p>
+        </div>
+
+        <!-- Barrier -->
+        <div class="diagram__barrier" aria-hidden="true">
+          <div class="diagram__barrier-line"></div>
+          <span class="diagram__barrier-label">key never crosses</span>
+          <div class="diagram__barrier-line"></div>
+        </div>
+
+        <!-- Server panel -->
+        <div class="diagram__panel diagram__panel--server">
+          <span class="diagram__panel-label">The server</span>
+
+          <div class="diagram__received">
+
+            <div class="diagram__received-item">
+              <span class="diagram__received-marker diagram__received-marker--pass">✓</span>
+              <div class="diagram__received-text">
+                <div class="diagram__received-name">Ciphertext</div>
+                <div class="diagram__received-desc">Your content arrives encrypted. Stored and served as-is. Unreadable without your key.</div>
+              </div>
+            </div>
+
+            <div class="diagram__received-item">
+              <span class="diagram__received-marker diagram__received-marker--pass">✓</span>
+              <div class="diagram__received-text">
+                <div class="diagram__received-name">Metadata</div>
+                <div class="diagram__received-desc">IDs, timestamps, sizes. Nothing about what the content is.</div>
+              </div>
+            </div>
+
+            <div class="diagram__received-item">
+              <span class="diagram__received-marker diagram__received-marker--block">✕</span>
+              <div class="diagram__received-text">
+                <div class="diagram__received-name diagram__received-name--blocked">Your key</div>
+                <div class="diagram__received-desc">Never arrives. Never stored. Not recoverable from here.</div>
+              </div>
+            </div>
+
+            <div class="diagram__received-item">
+              <span class="diagram__received-marker diagram__received-marker--block">✕</span>
+              <div class="diagram__received-text">
+                <div class="diagram__received-name diagram__received-name--blocked">Your password</div>
+                <div class="diagram__received-desc">Never transmitted. The server has no knowledge of it.</div>
+              </div>
+            </div>
+
+          </div>
+
+          <p class="diagram__panel-footer">
+            The operator cannot read your vault. Not as a policy. <span style="color: var(--text-primary); font-style: normal;">Because the key was never here.</span>
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Privacy + Pricing side by side -->
+  <div class="twin-section">
+    <div class="container">
+      <div class="twin-grid">
+
+        <!-- Privacy -->
+        <div class="twin-col" aria-labelledby="privacy-heading">
+          <p class="section-header" id="privacy-heading">Privacy &amp; encryption</p>
+
+          <div class="privacy__block">
+            <div class="privacy__item">
+              <div class="privacy__item-title">
+                <span class="dot"></span>
+                Content is encrypted before it leaves your device
+              </div>
+              <div class="privacy__item-body">
+                Cards, lorebooks, personas, and images are encrypted in your browser using AES-256-GCM.
+                The key is derived from your password, which <strong style="color: var(--accent);">never leaves your device</strong>.
+                The server stores ciphertext. <span style="color: var(--text-primary);">The operator cannot read your stored content.</span>
+              </div>
+            </div>
+
+            <div class="privacy__item">
+              <div class="privacy__item-title">
+                <span class="dot"></span>
+                No account. No email. No recovery.
+              </div>
+              <div class="privacy__item-body">
+                Access is a generated code, not an identity, not an email address.
+                There is no password reset, no way to recover a lost account.
+                Lose the code, lose the account.
+                <span class="feature-note">That is the design, not an oversight.</span>
+              </div>
+            </div>
+
+            <div class="privacy__item">
+              <div class="privacy__item-title">
+                <span class="dot"></span>
+                What gets logged
+              </div>
+              <div class="privacy__item-body">
+                When AI generates something, the server records: when, which model, how many tokens, which instance.
+                <strong style="color: var(--accent);">The prompt and the response are never written down.</strong>
+                This is wired into the architecture, not a setting that can be toggled.
+              </div>
+            </div>
+
+            <div class="caveat">
+              <strong>What end-to-end encryption does not cover:</strong> when you send a prompt, it travels to NanoGPT's servers in plaintext to produce a response. It is protected by TLS in transit, but NanoGPT processes it — <a href="https://nano-gpt.com/privacy" target="_blank" rel="noopener noreferrer" style="color: var(--amber);">their privacy policy</a> applies to that request. Once the response returns, it is encrypted before storage. This is inherent to how AI generation works. It is written here, not in a footnote.
+            </div>
+          </div>
+        </div>
+
+        <!-- Pricing -->
+        <div class="twin-col" aria-labelledby="pricing-heading">
+          <p class="section-header" id="pricing-heading">Pricing</p>
+
+          <div class="pricing__card">
+            <div class="pricing__top">
+              <span class="pricing__amount">$20</span>
+              <span class="pricing__period">/ month · month-to-month · no contract</span>
+            </div>
+
+            <div class="pricing__breakdown">
+              <div class="pricing__row">
+                <span class="pricing__row-label">AI subscription</span>
+                <span class="pricing__row-amount">$12</span>
+                <span class="pricing__row-note">A NanoGPT subscription provisioned on your behalf. You never visit nano-gpt.com. Standard models included: 60M tokens/week, 100 images/day.</span>
+                <span class="pricing__topup-note">Premium and pay-per-use models require a separate top-up balance, loaded by you directly. This is not included in the $12.</span>
+              </div>
+              <div class="pricing__row">
+                <span class="pricing__row-label">Platform fee</span>
+                <span class="pricing__row-amount">$8</span>
+                <span class="pricing__row-note">Hosting, domain, development, and $1/month to the Commons pool. This is what you are paying for.</span>
+              </div>
+            </div>
+
+            <div class="pricing__commons-note">
+              <strong style="color: var(--text-primary);">$1 of every platform fee</strong> goes to the Commons pool, visible above.
+              It funds free access for those who cannot or choose not to pay.
+              <span style="color: var(--text-secondary);">Paying users sustain free users. That is the model.</span>
+            </div>
+
+            <div class="pricing__founding">
+              <strong>Founding rate: $18/month.</strong> Grandfathered permanently for the first cohort. Not open for signups yet.
+            </div>
+
+            <div class="pricing__agpl">
+              <strong>AGPL-3.0.</strong> You are paying for hosting, not software. Anyone can self-host for free. Anyone hosting this for others must publish their modifications.
+              <a href="https://git.trap.lol/trap/underdark" target="_blank" rel="noopener noreferrer">View source →</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer__inner">
+      <p class="footer__statement">
+        If it ever becomes something you can't trust, the code is already yours.
+      </p>
+      <div class="footer__contact" aria-label="Contact">
+        <a class="footer__contact-link" href="mailto:trap@underdark.lol" aria-label="Email trap@underdark.lol">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="2" y="4" width="20" height="16" rx="2"/>
+            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+          </svg>
+          trap@underdark.lol
+        </a>
+        <span class="footer__divider" aria-hidden="true"></span>
+        <a class="footer__contact-link" href="https://t.me/trapl0l" target="_blank"
+           rel="noopener noreferrer" aria-label="Telegram @trapl0l">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m22 3-8.97 19.53-3.58-7.65L2 11.5Z"/>
+            <path d="M9.45 14.88 22 3"/>
+          </svg>
+          @trapl0l
+        </a>
+      </div>
+      <p class="footer__sig">
+        built by <a href="https://trap.lol" target="_blank" rel="noopener noreferrer">trap</a>
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>
